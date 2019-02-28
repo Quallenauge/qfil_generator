@@ -25,7 +25,7 @@ import sys,os,getopt
 import random,math
 import struct
 import hashlib
-
+import codecs
 import uuid
 
 import zlib
@@ -43,6 +43,37 @@ OFFSET_CRC32_OF_HEADER = 16
 GPT_HEADER_FORMAT = '<8sIIIIQQQQ16sQIII420x'
 GUID_PARTITION_ENTRY_FORMAT = '<16s16sQQQ72s'
 
+
+def ReverseByteOrder(data):
+    """
+    Method to reverse the byte order of a given unsigned data value
+    Input:
+        data:   data value whose byte order needs to be swap
+                data can only be as big as 4 bytes
+    Output:
+        revD: data value with its byte order reversed
+    """
+    s = "Error: Only 'unsigned' data of type 'int' or 'long' is allowed"
+    if not ((type(data) == int)or(type(data) == long)):
+        s1 = "Error: Invalid data type: %s" % type(data)
+        print(''.join([s,'\n',s1]))
+        return data
+    if(data < 0):
+        s2 = "Error: Data is signed. Value is less than 0"
+        print(''.join([s,'\n',s2]))
+        return data
+
+    seq = ["0x"]
+
+    while(data > 0):
+        d = data & 0xFF     # extract the least significant(LS) byte
+        seq.append('%02x'%d)# convert to appropriate string, append to sequence
+        data >>= 8          # push next higher byte to LS position
+
+    revD = int(''.join(seq),16)
+
+    return revD
+
 ## gpt parser code start
 
 def get_lba(fhandle, entry_number, count):
@@ -50,6 +81,12 @@ def get_lba(fhandle, entry_number, count):
     fbuf = fhandle.read(LBA_SIZE*count)
     
     return fbuf
+
+def swap64(x):
+    if ( x ==0 ):
+	return 0
+    little_endian = ReverseByteOrder(x)
+    return little_endian
 
 def unsigned32(n):
   return n & 0xFFFFFFFFL
@@ -123,7 +160,7 @@ def an_gpt_header(gpt_header, crc32_header_value, gpt_buf):
     print '\t\t\t<!-- NOTE: entries here are used by the parser when generating output -->'
     print '\t\t\t<!-- NOTE: each filename must be on it\'s own line as in variable=value-->'
     print '\t\t\tWRITE_PROTECT_BOUNDARY_IN_KB = 32768'
-    print '\t\t\tGROW_LAST_PARTITION_TO_FILL_DISK = true'
+    print '\t\t\tGROW_LAST_PARTITION_TO_FILL_DISK = false'
     print '\t\t</parser_instructions>\n'
 
     print '\t\t<!-- NOTE: "physical_partition" are listed in order and apply to devices such as eMMC cards that have (for example) 3 physical partitions -->'
@@ -540,15 +577,18 @@ def an_part_table(partition_table, gpt_header, fbuf):
         print 'size_in_kb="%d"' %part_size,
         print 'type="%s"'%part_type,
         print 'bootable="%s"' %part_bootable,
+        print 'firstlba="%s"' %part_lba_first,
+        print 'uniqueguid="%s"' %part_guid,
 
-        part_attr_tag = part_entry[4]
-        if part_attr_tag == 0:
+        #print 'attributes="0x%0.2X"' %part_entry[4],
+        part_attr_tag = swap64( part_entry[4] )
+        if(part_attr_tag & 0):
             print 'system="true"',
-        elif part_attr_tag == 60:
+        elif(part_attr_tag & 60):
             print 'readonly="true"',
-        elif part_attr_tag == 62:
+        elif(part_attr_tag & 62):
             print 'hidden="true"',
-        elif part_attr_tag == 63:
+        elif(part_attr_tag & 63):
             print 'automount="true"',
 
         part_filename = ''
@@ -556,7 +596,7 @@ def an_part_table(partition_table, gpt_header, fbuf):
 
         part_list_bak = ['rpm','sdi','hyp','sbl1','tz','pmic','aboot','raw_resources']
         part_list_img = ['persist','laf','drm','sns','mpt','eri','system','cache','userdata']
-        
+
         for party in part_list_bak:
             if party in part_match:
                 part_filename = '%s.mbn' %part_match.replace('bak','')
