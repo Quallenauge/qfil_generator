@@ -498,7 +498,12 @@ def CreateGPTPartitionTable(PhysicalPartitionNumber,UserProvided=False):
     PrimaryGPTNumLBAs=len(PrimaryGPT)/SECTOR_SIZE_IN_BYTES
     BackupGPTNumLBAs =len(BackupGPT)/SECTOR_SIZE_IN_BYTES
     i           = 2*SECTOR_SIZE_IN_BYTES    ## partition arrays begin here
-    FirstLBA    = PrimaryGPTNumLBAs
+    
+    if (PhyPartition[0][0]['firstlba']) >= 0:
+	FirstLBA    =  PhyPartition[0][0]['firstlba']
+	print "\nForcing start LBA to %i" % FirstLBA
+    else:
+	FirstLBA    = PrimaryGPTNumLBAs
     LastLBA     = FirstLBA               ## Make these equal at first
 
     if HashInstructions['WRITE_PROTECT_GPT_PARTITION_TABLE'] is True:
@@ -530,7 +535,11 @@ def CreateGPTPartitionTable(PhysicalPartitionNumber,UserProvided=False):
         print "   )   )   )   )   )   )   )   )   )   )   )   )   )   )   )   )   )   )"
         print "  (_,-\"   (_,-\"   (_,-\"   (_,-\"   (_,-\"   (_,-\"   (_,-\"   (_,-\"   (_,-\""
         print "="*78
-	
+
+	if (PhyPartition[k][j]['firstlba']) >= 0:
+		FirstLBA    =  PhyPartition[k][j]['firstlba']
+		print "\nForcing start LBA to %i" % FirstLBA
+
         PhyPartition[k][j]['size_in_kb'] = int(PhyPartition[k][j]['size_in_kb'])
         print "\n\n%d of %d \"%s\" (readonly=%s) and size=%dKB (%dMB) (%i sectors with %i bytes/sector)" %(j+1,len(PhyPartition[k]),PhyPartition[k][j]['label'],PhyPartition[k][j]['readonly'],PhyPartition[k][j]['size_in_kb'],PhyPartition[k][j]['size_in_kb']/1024,ConvertKBtoSectors(PhyPartition[k][j]['size_in_kb']),SECTOR_SIZE_IN_BYTES)
 
@@ -626,7 +635,8 @@ def CreateGPTPartitionTable(PhysicalPartitionNumber,UserProvided=False):
                 UpdatePatch("NUM_DISK_SECTORS-%d." % (BackupGPTNumLBAs-BackupStartSector),ByteOffset,PhysicalPartitionNumber,8,"NUM_DISK_SECTORS-%d." % PrimaryGPTNumLBAs,"DISK",                "Update last partition %d '%s' with actual size in Backup Header." % ((j+1),PhyPartition[k][j]['label']))
 	
         LastLBA = FirstLBA + ConvertKBtoSectors( PhyPartition[k][j]['size_in_kb'] ) ## increase by num sectors, LastLBA inclusive, so add 1 for size
-        LastLBA -= 1  # inclusive, meaning 0 to 3 is 4 sectors
+        if (j+1) != len(PhyPartition[k]):
+		LastLBA -= 1  # inclusive, meaning 0 to 3 is 4 sectors
 
         #import pdb; pdb.set_trace()
 
@@ -1319,6 +1329,7 @@ def ParseXML(XMLFile):
                 Partition['readbackverify']     = "false"
                 Partition['tries_remaining']    = 0
                 Partition['priority']           = 0
+                Partition['firstlba']   = -1
 
                 ##import pdb; pdb.set_trace()
                 
@@ -1406,7 +1417,8 @@ def ParseXML(XMLFile):
                             TempSizeInBytes = SECTOR_SIZE_IN_BYTES
                         Partition["size_in_kb"]=TempSizeInBytes/1024
                         Partition["original_size_in_kb"]=TempSizeInBytes/1024
-
+                    elif name=="firstlba":
+                        Partition["firstlba"]=int(value)
                     else:
                         print "Just assigned %s to %s" % (name,value)
                         Partition[name]=value
