@@ -1,0 +1,53 @@
+#!/bin/bash
+set -v
+export FILENAME=/storage/media/Downloads/Android/bq_aquaris_X_pro/backup/DevPhone/mmcblk0
+mkdir -p img
+dd if=$FILENAME of=img/modem skip=131072 count=172032
+dd if=$FILENAME of=img/fsc skip=393216 count=2
+dd if=$FILENAME of=img/ssd skip=393218 count=16
+dd if=$FILENAME of=img/sbl1 skip=393234 count=1024
+dd if=$FILENAME of=img/sbl1bak skip=394258 count=1024
+dd if=$FILENAME of=img/rpm skip=395282 count=1024
+dd if=$FILENAME of=img/rpmbak skip=396306 count=1024
+dd if=$FILENAME of=img/tz skip=397330 count=4096
+dd if=$FILENAME of=img/tzbak skip=401426 count=4096
+dd if=$FILENAME of=img/devcfg skip=405522 count=512
+dd if=$FILENAME of=img/devcfgbak skip=406034 count=512
+dd if=$FILENAME of=img/dsp skip=406546 count=32768
+dd if=$FILENAME of=img/modemst1 skip=439314 count=3072
+dd if=$FILENAME of=img/modemst2 skip=442386 count=3072
+dd if=$FILENAME of=img/DDR skip=524288 count=64
+dd if=$FILENAME of=img/fsg skip=524352 count=3072
+dd if=$FILENAME of=img/sec skip=527424 count=32
+dd if=$FILENAME of=img/splash skip=655360 count=22528
+dd if=$FILENAME of=img/aboot skip=786432 count=2048
+dd if=$FILENAME of=img/abootbak skip=788480 count=2048
+dd if=$FILENAME of=img/boot skip=790528 count=131072
+dd if=$FILENAME of=img/recovery skip=921600 count=131072
+dd if=$FILENAME of=img/devinfo skip=1052672 count=2048
+dd if=$FILENAME of=img/system skip=1054720 count=6291456
+dd if=$FILENAME of=img/cache skip=7471104 count=524288
+dd if=$FILENAME of=img/persist skip=7995392 count=65536
+dd if=$FILENAME of=img/misc skip=8060928 count=2048
+dd if=$FILENAME of=img/keystore skip=8062976 count=1024
+dd if=$FILENAME of=img/config skip=8064000 count=64
+dd if=$FILENAME of=img/oem skip=8064064 count=524288
+dd if=$FILENAME of=img/limits skip=8650752 count=64
+dd if=$FILENAME of=img/mota skip=8781824 count=1024
+dd if=$FILENAME of=img/dip skip=8782848 count=2048
+dd if=$FILENAME of=img/mdtp skip=8784896 count=65536
+dd if=$FILENAME of=img/syscfg skip=8850432 count=1024
+dd if=$FILENAME of=img/mcfg skip=8851456 count=8192
+dd if=$FILENAME of=img/lksecapp skip=8912896 count=256
+dd if=$FILENAME of=img/lksecappbak skip=8913152 count=256
+dd if=$FILENAME of=img/cmnlib skip=8913408 count=512
+dd if=$FILENAME of=img/cmnlibbak skip=8913920 count=512
+dd if=$FILENAME of=img/cmnlib64 skip=8914432 count=512
+dd if=$FILENAME of=img/cmnlib64bak skip=8914944 count=512
+dd if=$FILENAME of=img/keymaster skip=8915456 count=512
+dd if=$FILENAME of=img/keymasterbak skip=8915968 count=512
+dd if=$FILENAME of=img/apdp skip=9043968 count=512
+dd if=$FILENAME of=img/msadp skip=9044480 count=512
+dd if=$FILENAME of=img/dpo skip=9044992 count=16
+dd if=$FILENAME of=img/logdump skip=9045008 count=131072
+#dd if=$FILENAME of=img/userdata skip=9176080 count=112966607
